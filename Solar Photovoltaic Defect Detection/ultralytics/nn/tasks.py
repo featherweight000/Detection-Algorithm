@@ -9,10 +9,10 @@ from pathlib import Path
 import torch
 import torch.nn as nn
 
-from ultralytics.nn.modules.conv import (CBAM, SPDConv, RFAConv, SAConv2d, GSConv, Conv_Mish, SE, CA, DWConv)
+from ultralytics.nn.modules.conv import (DSAM, SPDConv, RFAConv, SAConv2d, MConv, Conv_Mish, SE, CA, DWConv)
 from ultralytics.nn.modules.MLCAOD import (C2f_ODConv, ODConv2d, MLCA, C2f_MLCA,
                                           EMA, DAttention, LocalWindowAttention, SimAM, NAMAttention)
-from ultralytics.nn.modules.CSPPC import (CSPPC)
+from ultralytics.nn.modules.CSP_P import (CSP_P)
 from ultralytics.nn.modules.ADown import (ADown)
 from ultralytics.nn.modules.C2fB import (C2f_UIB)
 from ultralytics.nn.modules import (
@@ -1000,10 +1000,10 @@ def parse_model(d, ch, verbose=True):  # model_dict, input_channels(3)
             NAMAttention,
             SPDConv,
             RFAConv,
-            GSConv,
+            MConv,
             SAConv2d,
             ADown,
-            CSPPC,
+            CSP_P,
             C2f_UIB,
         }:
             c1, c2 = ch[f], args[0]
@@ -1016,13 +1016,13 @@ def parse_model(d, ch, verbose=True):  # model_dict, input_channels(3)
                 )  # num heads
 
             args = [c1, c2, *args[1:]]
-            if m in {BottleneckCSP, C1, C2, C2f, C2fAttn, C3, C3TR, C3Ghost, C3x, RepC3, C2fCIB, CSPPC, C2f_UIB}:
+            if m in {BottleneckCSP, C1, C2, C2f, C2fAttn, C3, C3TR, C3Ghost, C3x, RepC3, C2fCIB, CSP_P, C2f_UIB}:
                 args.insert(2, n)  # number of repeats
                 n = 1
         elif m is AIFI:
             args = [ch[f], *args]
 
-        elif m in {MLCA,  EMA, DAttention, LocalWindowAttention, CBAM, SimAM, SE, CA}:
+        elif m in {MLCA,  EMA, DAttention, LocalWindowAttention, DSAM, SimAM, SE, CA}:
             args = [ch[f], *args]
 
         

@@ -55,7 +55,7 @@ from .block import (
     SCDown,
 )
 from .conv import (
-    CBAM,
+    DSAM,
     ChannelAttention,
     Concat,
     Conv,
@@ -71,12 +71,12 @@ from .conv import (
     SPDConv,
     RFAConv,
     SAConv2d,
-    GSConv,
+    MConv,
     SE,
     CA,
 )
 from .head import OBB, Classify, Detect, Pose, RTDETRDecoder, Segment, WorldDetect, v10Detect
-from .CSPPC import CSPPC
+from .CSP_P import CSP_P
 from .ADown import ADown
 from .C2fB import C2f_UIB
 from .transformer import (
@@ -104,7 +104,7 @@ __all__ = (
     "GhostConv",
     "ChannelAttention",
     "SpatialAttention",
-    "CBAM",
+    "DSAM",
     "Concat",
     "TransformerLayer",
     "TransformerBlock",

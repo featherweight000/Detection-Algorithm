@@ -20,7 +20,7 @@ __all__ = (
     "GhostConv",
     "ChannelAttention",
     "SpatialAttention",
-    "CBAM",
+    "DSAM",
     "Concat",
     "RepConv",
     'SPDConv',
@@ -308,11 +308,10 @@ class SpatialAttention(nn.Module):
         return x * self.act(self.cv1(torch.cat([torch.mean(x, 1, keepdim=True), torch.max(x, 1, keepdim=True)[0]], 1)))
 
 
-class CBAM(nn.Module):
+class DSAM(nn.Module):
     """Convolutional Block Attention Module."""
 
     def __init__(self, c1, kernel_size=7):
-        """Initialize CBAM with given input channel (c1) and kernel size."""
         super().__init__()
         self.channel_attention = ChannelAttention(c1)
         self.spatial_attention = SpatialAttention(kernel_size)
@@ -741,7 +740,7 @@ class SAConv2d(ConvAWS2d):
         return self.act(self.bn(out))
 
 
-# ---------------------------GSConv Begin---------------------------
+# -------------------------- Begin---------------------------
 class Conv_Mish(nn.Module):
     # Standard convolution
     def __init__(self, c1, c2, k=1, s=1, p=None, g=1, act=True):  # ch_in, ch_out, kernel, stride, padding, groups
@@ -757,8 +756,7 @@ class Conv_Mish(nn.Module):
         return self.act(self.conv(x))
 
 
-class GSConv(nn.Module):
-    # GSConv https://github.com/AlanLi1997/slim-neck-by-gsconv
+class MConv(nn.Module):
     def __init__(self, c1, c2, k=1, s=1, g=1, act=True):
         super().__init__()
         c_ = c2 // 2
@@ -782,8 +780,8 @@ class GSConv(nn.Module):
         return torch.cat((y[0], y[1]), 1)
 
 
-class GSConvns(GSConv):
-    # GSConv with a normative-shuffle https://github.com/AlanLi1997/slim-neck-by-gsconv
+class MConvns(MConv):
+
     def __init__(self, c1, c2, k=1, s=1, g=1, act=True):
         super().__init__(c1, c2, k=1, s=1, g=1, act=True)
         c_ = c2 // 2
@@ -797,14 +795,14 @@ class GSConvns(GSConv):
 
 
 class GSBottleneck(nn.Module):
-    # GS Bottleneck https://github.com/AlanLi1997/slim-neck-by-gsconv
+
     def __init__(self, c1, c2, k=3, s=1, e=0.5):
         super().__init__()
         c_ = int(c2 * e)
         # for lighting
         self.conv_lighting = nn.Sequential(
-            GSConv(c1, c_, 1, 1),
-            GSConv(c_, c2, 3, 1, act=False))
+            MConv(c1, c_, 1, 1),
+            MConv(c_, c2, 3, 1, act=False))
         self.shortcut = Conv_Mish(c1, c2, 1, 1, act=False)
 
     def forward(self, x):
@@ -818,9 +816,7 @@ class VoVGSCSP(nn.Module):
         c_ = int(c2 * e)  # hidden channels
         self.cv1 = Conv_Mish(c1, c_, 1, 1)
         self.cv2 = Conv_Mish(c1, c_, 1, 1)
-        # self.gc1 = GSConv(c_, c_, 1, 1)
-        # self.gc2 = GSConv(c_, c_, 1, 1)
-        # self.gsb = GSBottleneck(c_, c_, 1, 1)
+
         self.gsb = nn.Sequential(*(GSBottleneck(c_, c_, e=1.0) for _ in range(n)))
         self.res = Conv_Mish(c_, c_, 3, 1, act=False)
         self.cv3 = Conv_Mish(2 * c_, c2, 1)  #
@@ -832,7 +828,7 @@ class VoVGSCSP(nn.Module):
 
 
 class GSBottleneckC(GSBottleneck):
-    # cheap GS Bottleneck https://github.com/AlanLi1997/slim-neck-by-gsconv
+
     def __init__(self, c1, c2, k=3, s=1):
         super().__init__(c1, c2, k, s)
         self.shortcut = DWConv(c1, c2, k, s, act=False)
@@ -844,7 +840,7 @@ class VoVGSCSPC(VoVGSCSP):
         super().__init__(c1, c2)
         c_ = int(c2 * 0.5)  # hidden channels
         self.gsb = GSBottleneckC(c_, c_, 1, 1)
-# ---------------------------GSConv End---------------------------
+# --------------------------- End---------------------------
 
 '''-------------一、SE模块-----------------------------'''
 

@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-__all__ = ['CSPPC']
+__all__ = ['CSP_P']
 
 
 def autopad(k, p=None, d=1):  # kernel, padding, dilation
@@ -61,7 +61,7 @@ class Partial_conv3(nn.Module):
         return x
 
 
-class CSPPC_Bottleneck(nn.Module):
+class CSP_P_Bottleneck(nn.Module):
     def __init__(self, dim):
         super().__init__()
         self.DualPConv = nn.Sequential(Partial_conv3(dim, n_div=4, forward='split_cat'),
@@ -71,14 +71,14 @@ class CSPPC_Bottleneck(nn.Module):
         return self.DualPConv(x)
 
 
-class CSPPC(nn.Module):
+class CSP_P(nn.Module):
     # CSP Bottleneck with 2 convolutions
     def __init__(self, c1, c2, n=1, shortcut=False, g=1, e=0.5):  # ch_in, ch_out, number, shortcut, groups, expansion
         super().__init__()
         self.c = int(c2 * e)  # hidden channels
         self.cv1 = Conv(c1, 2 * self.c, 1, 1)
         self.cv2 = Conv((2 + n) * self.c, c2, 1)  # optional act=FReLU(c2)
-        self.m = nn.ModuleList(CSPPC_Bottleneck(self.c) for _ in range(n))
+        self.m = nn.ModuleList(CSP_P_Bottleneck(self.c) for _ in range(n))
 
     def forward(self, x):
         y = list(self.cv1(x).split((self.c, self.c), 1))
@@ -92,7 +92,7 @@ if __name__ == "__main__":
     image = torch.rand(*image_size)
 
     # Model
-    model = CSPPC(64, 128)
+    model = CSP_P(64, 128)
 
     out = model(image)
     print(out.size())
